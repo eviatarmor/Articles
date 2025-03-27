@@ -1,8 +1,3 @@
-title: "The Relatively Unknown Macro Technique"
-date: 17-07-2021
-tags: c, macros, x-macro
---EOH--
-
 If you're a programmer that has been programming for decades, you probably already have seen this technique, this technique was vastly popular around the 60', where speed played a much bigger role than nowadays, and where compilers weren't as smart as today.
 Many people nowadays still aren't aware of this "special" macro technique, so it remains relatively unknown.
 
