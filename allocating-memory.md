@@ -1,8 +1,3 @@
-title: "Allocating Memory"
-date: 27-04-2021
-tags: c, cpp, memory, gdb, pointers, address, stack, heap
---EOH--
-
 # Allocating Memory
 
 In C/C++ there are different ways of allocating memory, each way allocating the memory in different areas in our computer memory, I'm going to explain how to allocate in both ways.  
