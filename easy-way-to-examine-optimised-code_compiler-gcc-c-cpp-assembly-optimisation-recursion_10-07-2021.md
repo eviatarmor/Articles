@@ -1,8 +1,3 @@
-title: "Easy Way to Examine Optimized Code"
-date: 10-07-2021
-tags: compiler, gcc, c, cpp, assembly, optimization, recursion
---EOH--
-
 Lately, I've been doing a sine function in ANSI C by using [Taylor Series](https://en.wikipedia.org/wiki/Taylor_series) and [Tail Call Recursion](https://en.wikipedia.org/wiki/Tail_call) and I wanted to see if the compiler managed to perform [Tail Call Optimization](https://en.wikipedia.org/wiki/Tail_call), and obviously it's not so nice to look at its assembly and understand it, so I looked for a different way by assigning GCC a flag.
 
 ### Introducing Tree Dump Files
