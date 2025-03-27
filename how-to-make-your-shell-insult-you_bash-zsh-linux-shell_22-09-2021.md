@@ -1,7 +1,3 @@
-title: "How to make your shell savage"
-date: 22-09-2021
-tags: bash, zsh, linux, shell
---EOH--
 
 This is a fun feature that some programmers like to add to their Linux machine, which will make your shell insult you when you typing an incorrect/misspelled command.
 
