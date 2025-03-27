@@ -1,8 +1,3 @@
-title: "Making a Mouse with Arduino and an Analog Joystick"
-date: 19-11-2021
-tags: cpp, python, arduino, electronics, mouse, serial
---EOH--
-
 I forgot that I bought an Arduino Radio-frequency identification (RFID) Kit a few years back, so I thought about putting it to good use, and making my mouse with a joystick controller, and so I did.
 
 
