@@ -1,0 +1,196 @@
+Since I found that there aren't many resources explaining how to implement a [Time-based One-Time Password](https://en.wikipedia.org/wiki/Time-based_one-time_password) [Multi Factor Authentication](https://en.wikipedia.org/wiki/Multi-factor_authentication) with Firebase, I thought I would create my own tutorial.
+
+
+
+## Enabling TOTP MFA
+We need to make a REST API request that enables TOTP and MFA to our Firebase:
+```bash
+curl -X PATCH "https://identitytoolkit.googleapis.com/admin/v2/projects/PROJECT_ID/config?updateMask=mfa" \
+    -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+    -H "Content-Type: application/json" \
+    -H "X-Goog-User-Project: PROJECT_ID" \
+    -d \
+    '{
+        "mfa": {
+          "state": "ENABLED",
+          "providerConfigs": [{
+            "state": "ENABLED",
+            "totpProviderConfig": {
+              "adjacentIntervals": NUM_ADJ_INTERVALS
+            }
+          }]
+       }
+    }'
+```
+> You will need to install `curl`:
+> * On Ubuntu: `sudo apt-get install curl`
+> * On Windows, you need to [install it](https://curl.se/windows/)
+> 
+> You also need to make sure you have Firebase CLI configured.
+
+Where:
+* `PROJECT_ID`: The project ID
+* `NUM_ADJ_INTERVALS`: The number of time-window intervals, from zero to ten. The default is five.
+
+## Implementing a basic MFA in Angular
+We can now create a service to handle our MFA logic.
+### User TOTP Enrollment
+```ts
+@Injectable({
+    providedIn: "root"
+})
+export class MultiFactorAuth {
+    private readonly AUTH_NAME = "My Multi Factor Auth"
+    private totpSecret?: TotpSecret;
+
+    constructor(private readonly auth: Auth) {}
+
+    async enroll(user: User): Promise<string> {
+        const session = await multiFactor(user).getSession(); // Creates a session for our MFA
+        this.totpSecret = await TotpMultiFactorGenerator.generateSecret(session); // Generates a secret key for our TOTP
+        return this.totpSecret.generateQrCodeUrl(user.email, this.AUTH_NAME); // Creates a URL for the user to scan
+    }
+}
+```
+> More information about `generateQrCodeUrl` can be found [here](https://github.com/google/google-authenticator/wiki/Key-Uri-Format).
+
+After we stsarted the enrolling process, the user would need to confirm the Authentication code, so we need to make a confirm function as well, I prefer to make it as part of the `enroll` function because we would never use it just by itself, and it makes the steps easier.
+
+```ts
+// --------
+export class MultiFactorAuth {
+    // --------
+
+    async enroll(user: User) {
+        const session = await multiFactor(user).getSession();
+        this.totpSecret = await TotpMultiFactorGenerator.generateSecret(session);
+
+        const verify = async (code: string) => {
+            const assertion = TotpMultiFactorGenerator.assertionForEnrollment(
+                this.totpSecret,
+                code
+            );
+
+            await multiFactor(user).enroll(multiFactorAssertion, this.AUTH_NAME);
+
+            // The function didn't throw, meaning it was a success.
+            this.totpSecret = undefined;
+        }
+
+        const url = this.totpSecret.generateQrCodeUrl(user.email, this.AUTH_NAME);
+        return {
+            url,
+            verify
+        };
+    }
+}
+```
+
+And it's done! We can use it in our codebase to enroll users to use TOTP.
+
+We can use it like so:
+```ts
+const enrollment = this.mfa.enroll(myUser);
+viewQR(enrollment.url);
+// Waiting for the user to scan it with Google Authenticator
+try {
+    await enrollment.verify(userCode); 
+    console.log("You enrolled successfully.");
+}
+catch(error) {
+    console.error("There was an error with your enrollment.");
+    console.error(error);
+}
+```
+
+> `viewQR` is not a real function, it's up to you to implement it how ever you like.
+
+### TOTP Sign In
+
+Now after the user is enrolled, we would also want them to enter the MFA code from their `Google Authenticator` in our website as part of the login process.
+
+We do that like so:
+
+```ts
+// --------
+export class MultiFactorAuth {
+    // --------
+    private resolver?: MultiFactorResolver;
+    async login(error: MultiFactorError) {
+        this.resolver = getMultiFactorResolver(this.auth, error);  // Information about available authentication factor
+
+        const verify = async (code: string) => {
+            // Looking through all available MFA methods and looking for Google Authenticator
+            const totpHint = this.resolver.hints.find(
+                (hint: any) => hint.factorId === TotpMultiFactorGenerator.FACTOR_ID
+            );
+
+            // User isn't enrolled to TOTP
+            if (!totpHint) {
+                throw new Error("No TOTP factor available");
+            }
+
+            // Creates a verification object that Firebase can validate
+            const multiFactorAssertion = TotpMultiFactorGenerator.assertionForSignIn(
+                totpHint.uid,
+                code
+            );
+
+            // Signs in
+            await this.resolver.resolveSignIn(multiFactorAssertion);
+            this.resolver = undefined;
+        }
+
+        return {
+            factors,
+            verify
+        };
+    }
+}
+```
+
+We can use it like so:
+```ts
+async loginWithEmail(email: string, password: string) {
+    try {
+        const user = await signInWithEmailAndPassword(this.auth, email, password);
+    }
+    catch(error) {
+        if (error.code === "auth/multi-factor-auth-required") {
+            const result = await this.mfa.login(user);
+            const code = prompt("Enter a 6-digit code from Google Authenticator.");
+            
+            try {
+                await result.verify(code);
+            } catch(verificationError) {
+                console.error(verificationError);
+            }
+        } else {
+            console.error(error);
+        }
+    }
+}
+```
+
+### User TOTP Unenrollment
+Sometimes you might want to unenroll TOTP from a specific user, you can do that by doing:
+
+```ts
+// --------
+export class MultiFactorAuth {
+    // --------
+
+    async unenroll(user: User) {
+        const factors = multiFactor(user).enrolledFactors;
+        
+        const factor = factors.find(factor => factor.uid === TotpMultiFactorGenerator.FACTOR_ID);
+        if(!factor) {
+            throw new Error("TOTP factor was not found");
+        }
+
+        await multiFactor(user).unenroll(factor);
+    }
+}
+```
+
+Thank you for reading. And good luck!
