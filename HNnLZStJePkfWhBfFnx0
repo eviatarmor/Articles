@@ -1,0 +1,172 @@
+The [Flynn's taxonomy](https://en.wikipedia.org/wiki/Flynn%27s_taxonomy) classifies computer architectures based on two dimensions:
+* How many **instruction streams** are being executed
+* How many **data streams** they operate on
+
+The four categories are:
+1. [SISD (Single Instruction, Single Data)](https://en.wikipedia.org/wiki/Single_instruction,_single_data) - This is the traditional sequential processors
+2. [SIMD (Single Instruction, Multiple Data)](https://en.wikipedia.org/wiki/Single_instruction,_multiple_data) - Vector processors
+3. [MISD (Multiple Instruction, Single Data)](https://en.wikipedia.org/wiki/Multiple_instruction,_single_data) - Used in some fault-tolerant systems
+4. [MIMD (Multiple Instruction, Multiple Data)](https://en.wikipedia.org/wiki/Multiple_instruction,_multiple_data) - Multi-core processors and distributed systems
+
+We can also view them in a diagram like this:
+![Classification of Flynn's Taxonomy](https://media.geeksforgeeks.org/wp-content/uploads/20250828120310675463/flynn_s_classification_of_computers.webp)
+
+Later on NVIDIA developed their [SIMT (Single Instruction, Multiple Threads)](https://en.wikipedia.org/wiki/Single_instruction,_multiple_threads) which inspired by this taxonomy, and it's what being used in GPU architecture nowadays.
+
+### SISD
+One instruction executes on one piece of data at a time.
+
+#### How it works
+* Fetch one instruction
+* Execute it on one data element
+* Move to next instruction
+* Repeat
+#### Example
+```cpp
+int a = 1;
+int b = 2;
+int c = a + b; // One addition, on result
+```
+#### Real-world examples
+* Early single-core CPUs such as the original Inte x86 processors
+
+![Intel 8086](https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Intel_C8086.jpg/250px-Intel_C8086.jpg)
+
+* Simple microcontrollers such as Arduino Uno
+
+![Arduino Uno](https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Arduino_Uno_-_R3.jpg/250px-Arduino_Uno_-_R3.jpg)
+
+### SIMD
+One instruction operates on multiple data elements simultaneously using vector/parallel hardware.
+
+#### How it works
+* One instruction is broadcast to multiple processing units
+* Each unit executes the same operation on different data
+* All operations happen in synchronisation
+
+#### Example
+```cpp
+constexpr size_t LENGTH = 4;
+alignas(16) float a[LENGTH] = {1, 2, 3, 4};
+alignas(16) float b[LENGTH] = {5, 6, 7, 8};
+alignas(16) float c[LENGTH];
+
+// This is SSE
+__m128 va = _mm_load_ps(a); 
+__m128 vb = _mm_load_ps(b);
+__m128 vc = _mm_add_ps(va, vb);
+_mm_store_ps(c, vc); // c now is {6, 8, 10, 12}
+```
+
+#### Real-world examples
+* Modern CPUs such as AMD Ryzen
+
+![AMD Ryzen 7 3700X](https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/AMD_Ryzen_7_3700X_top_IMGP3165_smial_wp.jpg/250px-AMD_Ryzen_7_3700X_top_IMGP3165_smial_wp.jpg)
+
+
+### MISD
+Multiple different instructions operate on the same data stream simultaneously.
+
+#### How it works
+* Same data flows through multiple processors
+* Each processor executes different instructions on it
+* Results are compared or combined
+
+#### Example
+```
+Input: stream of sensor data
+Processor 1: checks for errors
+Processor 2: computes checksum  
+Processor 3: validates range
+All working on the same data simultaneously
+```
+
+#### Real-world examples
+* The flight control system for the Space Shuttle - each processor run different instructions on the same data simultaneously to verify results and ensure fault tolerance.
+
+> This classification was the least used in practice.
+
+### MIMD
+Multiple processors executing completely different instructions on different data independently.
+
+#### How it works
+* Multiple independent processors or cores
+* Each runs its own program/instruction stream
+* Each works on its own data
+* Processors can communicate but aren't synchronized
+
+#### Example
+```
+// Core 1:
+compressVideo(stream1);
+
+// Core 2:  
+processAudio(stream2);
+
+// Core 3:
+handleNetworking(packets);
+
+// Core 4:
+renderGraphics(scene);
+```
+
+#### Real-world examples
+* Multi-core CPUs
+* Server clustering
+
+![Server Clustering](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqWx1tn2aKUm5E9NVVfWG8CPeyK1uT8XlwhA&s])
+
+### SIMT (bonus)
+Multiple threads executes the same instruction, but with some flexibility for divergence (take different branches).
+
+#### How it works
+* Groups of threads execute same instruction
+* Unlike SIMD, threads can diverge
+* If threads diverge, both paths execute serially (less efficient)
+* Threads have their own registers and can make independent memory accesses
+
+#### Example
+```cpp
+// This is NVIDIA CUDA
+__global__ void add(float* a, float* b, float* c, int n) {
+    int i = threadIdx.x;  // Each thread gets its own index
+    if (i < n) {
+        c[i] = a[i] + b[i];  // Each thread does ONE addition
+    }
+}
+
+constexpr size_t LENGTH = 4;
+float a[LENGTH] = {1, 2, 3, 4};
+float b[LENGTH] = {5, 6, 7, 8};
+float c[LENGTH];
+
+// Allocate GPU memory
+float *d_a, *d_b, *d_c;
+cudaMalloc(&d_a, LENGTH * sizeof(float));
+cudaMalloc(&d_b, LENGTH * sizeof(float));
+cudaMalloc(&d_c, LENGTH * sizeof(float));
+
+// Copy data to GPU
+cudaMemcpy(d_a, a, LENGTH * sizeof(float), cudaMemcpyHostToDevice);
+cudaMemcpy(d_b, b, LENGTH * sizeof(float), cudaMemcpyHostToDevice);
+
+// This syntax is unique to CUDA
+add<<<1, LENGTH>>>(d_a, d_b, d_c, LENGTH);
+
+// Copy result back to CPU
+cudaMemcpy(c, d_c, LENGTH * sizeof(float), cudaMemcpyDeviceToHost); 
+// c now is {6, 8, 10, 12}
+
+cudaFree(d_a);
+cudaFree(d_b);
+cudaFree(d_c);
+```
+
+> In theory this is incredibly inefficient for small data, but it would really excel when we have millions of data.
+
+#### Real-world examples
+* Graphics rendering
+* AI training
+* Cryptocurrency mining
+
+![NVIDIA CUDA Cores](https://www.gpumag.com/wp-content/uploads/2020/12/What-Are-NVIDIA-CUDA-Cores.jpg)
