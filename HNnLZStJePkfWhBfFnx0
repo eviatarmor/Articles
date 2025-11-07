@@ -1,3 +1,4 @@
+
 The [Flynn's taxonomy](https://en.wikipedia.org/wiki/Flynn%27s_taxonomy) classifies computer architectures based on two dimensions:
 * How many **instruction streams** are being executed
 * How many **data streams** they operate on
@@ -21,20 +22,15 @@ One instruction executes on one piece of data at a time.
 * Execute it on one data element
 * Move to next instruction
 * Repeat
-#### Example
+#### Examples
 ```cpp
 int a = 1;
 int b = 2;
 int c = a + b; // One addition, on result
 ```
-#### Real-world examples
-* Early single-core CPUs such as the original Inte x86 processors
 
-![Intel 8086](https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Intel_C8086.jpg/250px-Intel_C8086.jpg)
-
-* Simple microcontrollers such as Arduino Uno
-
-![Arduino Uno](https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Arduino_Uno_-_R3.jpg/250px-Arduino_Uno_-_R3.jpg)
+* Early single-core CPUs (such as the Intel 8080/8086 processors)
+* Simple microcontrollers (such as Arduino Uno)
 
 ### SIMD
 One instruction operates on multiple data elements simultaneously using vector/parallel hardware.
@@ -44,7 +40,7 @@ One instruction operates on multiple data elements simultaneously using vector/p
 * Each unit executes the same operation on different data
 * All operations happen in synchronisation
 
-#### Example
+#### Examples
 ```cpp
 constexpr size_t LENGTH = 4;
 alignas(16) float a[LENGTH] = {1, 2, 3, 4};
@@ -58,10 +54,7 @@ __m128 vc = _mm_add_ps(va, vb);
 _mm_store_ps(c, vc); // c now is {6, 8, 10, 12}
 ```
 
-#### Real-world examples
-* Modern CPUs such as AMD Ryzen
-
-![AMD Ryzen 7 3700X](https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/AMD_Ryzen_7_3700X_top_IMGP3165_smial_wp.jpg/250px-AMD_Ryzen_7_3700X_top_IMGP3165_smial_wp.jpg)
+* Modern CPUs
 
 
 ### MISD
@@ -91,11 +84,11 @@ Multiple processors executing completely different instructions on different dat
 
 #### How it works
 * Multiple independent processors or cores
-* Each runs its own program/instruction stream
+* Each runs its own program
 * Each works on its own data
-* Processors can communicate but aren't synchronized
+* Processors can communicate but aren't synchronised
 
-#### Example
+#### Examples
 ```
 // Core 1:
 compressVideo(stream1);
@@ -109,15 +102,11 @@ handleNetworking(packets);
 // Core 4:
 renderGraphics(scene);
 ```
-
-#### Real-world examples
 * Multi-core CPUs
 * Server clustering
 
-![Server Clustering](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqWx1tn2aKUm5E9NVVfWG8CPeyK1uT8XlwhA&s])
-
 ### SIMT (bonus)
-Multiple threads executes the same instruction, but with some flexibility for divergence (take different branches).
+Multiple threads executes the same instruction, but with some flexibility for divergence.
 
 #### How it works
 * Groups of threads execute same instruction
@@ -164,9 +153,6 @@ cudaFree(d_c);
 
 > In theory this is incredibly inefficient for small data, but it would really excel when we have millions of data.
 
-#### Real-world examples
 * Graphics rendering
 * AI training
 * Cryptocurrency mining
-
-![NVIDIA CUDA Cores](https://www.gpumag.com/wp-content/uploads/2020/12/What-Are-NVIDIA-CUDA-Cores.jpg)
