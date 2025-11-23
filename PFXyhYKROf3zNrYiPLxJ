@@ -1,8 +1,8 @@
-If you're a programmer that has been programming for decades, you probably already have seen this technique, this technique was vastly popular around the 60', where speed played a much bigger role than nowadays, and where compilers weren't as smart as today.
+If you're a programmer who has been programming for decades, you probably already have seen this technique. This technique was vastly popular around the 60, where speed played a much bigger role than nowadays, and where compilers weren't as smart as today.
 Many people nowadays still aren't aware of this "special" macro technique, so it remains relatively unknown.
 
 #### What are X Macros?
-X Macros are an advanced preprocessor technique to form parallel lists which can be very powerful to create a self-maintaining and interdependent code, it is commonly used among operating system developers.
+X Macros are an advanced preprocessor technique to form parallel lists, which can be very powerful to create a self-maintaining and interdependent code. It is commonly used among operating system developers.
 
 It is composed by using nested macros by _defining_ the list elements and then _expanding_ them to generate a piece of code:
 
@@ -38,13 +38,13 @@ int main()
 }
 ```
 
-> Yeah, The alignment is not great.
+> Yeah, the alignment is not great.
 
 As you can see it generated 3 `printf`'s that each is printing the name in our `NAMES` list, so what happened here is that our `NAMES` was expecting a macro named `X` and passed to that macro a parameter ( which is the name ), and then we defined our `X` macro that expecting a parameter and printing it.
 
-Let's take a look at a bit more useful and complex case, Let's create a smart enumerator for C:
+Let's take a look at a bit more useful and complex case. Let's create a smart enumerator for C:
 
-First of all, We need to create our enum list, we won't do that with the `enum` type, but we will use our X Macro list instead:
+First of all, we need to create our enum list; we won't do that with the `enum` type, but we will use our X Macro list instead:
 ```c
 #define XCOLORS \
     X(RED)      \
@@ -63,7 +63,7 @@ enum Colors {
 };
 ```
 
-Now that we did that, Let's create utility functions, we will create an enum `size` function and a `to_string` function.
+Now that we did that, let's create utility functions, we will create an enum `size` function and a `to_string` function.
 
 Getting the size of our enum type:
 ```c
