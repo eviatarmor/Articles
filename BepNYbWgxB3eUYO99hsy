@@ -7,7 +7,7 @@ void print_hello() {
     printf("Hello World!\n");
 }
 ```
-You might be telling yourself that the compiler can't optimize something here, but in a matter of fact, it can! Since we only printing text and going to the next line we can optimize this call to be using `puts()` rather than `printf()` which is a bit faster ( You can benchmark it! ) because it does not need to perform string parsing.
+You might be telling yourself that the compiler can't optimize something here, but in a matter of fact, it can! Since we are only printing text and going to the next line, we can optimize this call to be using `puts()` rather than `printf()`, which is a bit faster ( You can benchmark it! ) because it does not need to perform string parsing.
 Let's take a look at its assembly code so it indeed was being optimized:
 ```x86asm
 .LC0:
@@ -23,13 +23,13 @@ Let's compile it again with GCC and our new flag:
 ```zsh
 $ gcc test.c -O3 -fdump-tree-all
 ```
-> Warning: You better do that in a folder because it's going to generate a lot of files.
+> Warning: You'd better do that in a folder because it's going to generate a lot of files.
 
-Now lookup for a file with the word optimized in it, you can do that fast by writing:
+Now, look for a file with the word optimized in it. You can do that fast by writing:
 ```cpp
 $ ls | grep optimized | xargs emacs &
 ```
-> You can replace emacs by a different text editor.
+> You can replace Emacs with a different text editor.
 
 The content of the file is probably like this:
 ```c
@@ -57,12 +57,12 @@ Before I talk about what happened here, I'm going to talk about those weird func
 * First Parameter - In our `print_hello()` function we can see that the first parameter is a bit weird, this parameter is for name mangling, we can view the actual parameter by using `c++filt` like so: `$ c++filt _Z11print_hellov` which will print `print_hello()` ( If you used a C compiler this shouldn't be a problem ).
 * `funcdef_no` - Is the Function Definition Number, every basic block that is belonging to a function has a unique number.
 * `decl_uid` - Is the function Declaration Unique Identifier. In our GCC tree, there is a function declaration tree, then that is the unique identifier in the tree.
-* `cgraph_uid` - Call Graph Unique Identifier. Is the unique identifier in the call graph ( or control-flow graph ) that represents the relationship between parents and child functions in the program.
+* `cgraph_uid` - Call Graph Unique Identifier. It is the unique identifier in the call graph ( or control-flow graph ) that represents the relationship between parent and child functions in the program.
 * `symbol_order` - Is the Call Graph node order.
 * `bb`- Is the Basic Block. BB is a set of statements that do not have any _in_ and _out_ branches except _entry_ and _exit_.
 * `local count` - Is the BB Counting, keeping track of how many times each basic block is executed.
 
-> Don't worry if you didn't get all of them, I just briefly explained them because they're not so important for us.
+> Don't worry if you didn't get all of them. I just briefly explained them because they're not so important for us.
 
 Now it's time to examine our optimized file!
 * As you can see our BB number is 2 in both functions, which means that the `print_hello()` function must have been inlined, also another indicator for that is the `(executed once)` beside our function parameters.
@@ -82,7 +82,7 @@ int main()
 }
 ```
 
-Let's dump its tree files, and see the optimized file:
+Let's dump its tree files and see the optimized file:
 ```c
 ;; Function infinite_print (infinite_print, funcdef_no=11, decl_uid=2381, cgraph_uid=12, symbol_order=11) (executed once)
 
@@ -119,7 +119,7 @@ Now let's take it a bit further! Remember the `cgraph` parameter for the Call Gr
 ```zsh
 $ gcc test.c -O3 -fdump-tree-all-graph
 ```
-It will generate a bunch of files again, we are interested in the `optimized.dot` file, let's convert it to an image so we can see it: ( Make sure you have `dot` installed. )
+It will generate a bunch of files again. We are interested in the `optimized.dot` file, let's convert it to an image so we can see it: ( Make sure you have `dot` installed. )
 ```zsh
 $ dot -Tpng optimized.dot > optimized.png
 ```
